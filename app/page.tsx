@@ -159,7 +159,7 @@ export default function Home() {
               <span className="text-ink/42">EU AI Act · GDPR Art. 13</span>
             </p>
             <a
-              href="https://github.com/your-username"
+              href="https://github.com/notvincent8"
               target="_blank"
               rel="noopener noreferrer"
               className="ml-auto shrink-0 font-body text-[0.6rem] tracking-[0.15em] uppercase text-ink/25 hover:text-ink/55 transition-colors"

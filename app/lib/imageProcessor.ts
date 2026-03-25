@@ -101,3 +101,5 @@ export const formatBytes = (bytes: number): string => {
 export const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 
 export const isAcceptedType = (type: string) => ACCEPTED_TYPES.includes(type)
+
+// TODO - Object URL leak, call URL.revokeObjectURL(image.previewUrl) when the image is cleared/replaced.

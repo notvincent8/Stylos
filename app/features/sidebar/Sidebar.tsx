@@ -10,7 +10,10 @@ export type Layout = "columns" | "rows"
 
 const MAX_CUSTOM = 300
 
-const sanitize = (s: string) => s.replace(/<[^>]*>/g, "")
+// Hoisted: regex literals inside a function are recreated on every call.
+// Safe to share: String.replace() does not mutate lastIndex.
+const TAG_REGEX = /<[^>]*>/g
+const sanitize = (s: string) => s.replace(TAG_REGEX, "")
 
 const IconColumns = (props: SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 14 14" fill="currentColor" {...props}>
