@@ -1,4 +1,3 @@
-import Label from "@/app/components/ui/Label"
 import { cn } from "@/app/lib/cn"
 import { FIELDS } from "@/app/lib/prompt-builder/constants"
 import type { Field } from "@/app/lib/prompt-builder/type"
@@ -10,8 +9,8 @@ type FieldSelectorProps = {
 
 const FieldSelector = ({ selectedFields, onToggle }: FieldSelectorProps) => {
   return (
-    <div>
-      <Label>Disciplines</Label>
+    <fieldset className="border-none p-0 m-0">
+      <legend className="text-[0.6rem] tracking-[0.22em] uppercase text-ink/42 font-body font-semibold mb-[0.6rem]">Disciplines</legend>
       <div className="flex flex-col gap-[0.28rem]">
         {FIELDS.map((f) => {
           const isActive = selectedFields.includes(f.id)
@@ -19,6 +18,7 @@ const FieldSelector = ({ selectedFields, onToggle }: FieldSelectorProps) => {
             <button
               type="button"
               key={f.id}
+              aria-pressed={isActive}
               onClick={() => onToggle(f.id)}
               className={cn(
                 "flex items-center gap-2 w-full font-body text-[0.72rem] font-semibold tracking-[0.04em] uppercase",
@@ -34,7 +34,7 @@ const FieldSelector = ({ selectedFields, onToggle }: FieldSelectorProps) => {
           )
         })}
       </div>
-    </div>
+    </fieldset>
   )
 }
 

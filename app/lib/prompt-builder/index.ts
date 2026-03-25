@@ -5,6 +5,7 @@ import {
   LOCKED_KEYWORDS_RULE,
   MULTI_FIELD_RULE,
   QUALITY_RULES,
+  SECURITY_RULES,
   TRENDING_RULE,
 } from "./constants"
 import { formatFieldInstruction, formatOutput, injectKeywordRange } from "./formatters"
@@ -31,6 +32,7 @@ export const buildPrompt = (options: PromptBuilderOptions): PromptBuildResult =>
   const systemSections: string[] = []
 
   systemSections.push(`<role>\n${BASE_ROLE.trim()}\n</role>`)
+  systemSections.push(`<security_rules>\n${SECURITY_RULES.trim()}\n</security_rules>`)
   systemSections.push(`<core_rules>\n${CORE_RULES.trim()}\n</core_rules>`)
   systemSections.push(
     `<quality_rules>\n${injectKeywordRange(QUALITY_RULES, effectiveMin, remainingSlots).trim()}\n</quality_rules>`,

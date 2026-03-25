@@ -9,6 +9,8 @@ type KeywordRowProps = {
 }
 const KeywordRow = ({ kw, isLocked, onToggleLock }: KeywordRowProps) => {
   const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
+  const showTooltip = (hovered || focused) && !!kw.description
 
   const barColor = kw.confidence >= 8 ? "bg-accent" : kw.confidence >= 5 ? "bg-ink/42" : "bg-danger"
   const scoreColor = kw.confidence >= 8 ? "text-accent" : kw.confidence >= 5 ? "text-ink/42" : "text-danger"
@@ -17,6 +19,8 @@ const KeywordRow = ({ kw, isLocked, onToggleLock }: KeywordRowProps) => {
     <div className={cn("relative", hovered ? "z-10" : "z-0")}>
       <button
         type="button"
+        aria-pressed={isLocked}
+        aria-label={`${kw.label}${isLocked ? ", locked" : ""}${kw.description ? `. ${kw.description}` : ""}`}
         className={cn(
           "group w-full flex items-center gap-3 py-[0.6rem] font-body",
           "border-b transition-colors hover:bg-surface-2",
@@ -25,6 +29,8 @@ const KeywordRow = ({ kw, isLocked, onToggleLock }: KeywordRowProps) => {
         onClick={() => onToggleLock(kw.label)}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
       >
         <span
           className={cn(
@@ -56,7 +62,7 @@ const KeywordRow = ({ kw, isLocked, onToggleLock }: KeywordRowProps) => {
         </span>
       </button>
 
-      {hovered && kw.description && (
+      {showTooltip && (
         <div className="absolute bottom-full -translate-y-2 left-4 z-50 bg-surface-3 border border-edge-strong p-3.5 text-[0.75rem] text-ink leading-relaxed max-w-75 min-w-45 font-body shadow-[0_8px_32px_rgba(0,0,0,0.55)] pointer-events-none">
           {kw.description}
           <div className="absolute -bottom-1.25 left-3 w-2 h-2 bg-surface-3 border-r border-b border-edge-strong rotate-45" />

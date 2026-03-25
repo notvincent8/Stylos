@@ -17,6 +17,7 @@ const ScopeControl = ({ maxKeywords, lockedCount, remainingSlots, onAdjust }: Sc
           type="button"
           onClick={() => onAdjust(-1)}
           disabled={maxKeywords <= 1}
+          aria-label="Decrease keyword count"
           className={cn(
             "w-8 h-8 flex items-center justify-center font-body font-semibold text-base",
             "border border-edge-mid transition-colors",
@@ -36,6 +37,7 @@ const ScopeControl = ({ maxKeywords, lockedCount, remainingSlots, onAdjust }: Sc
           type="button"
           onClick={() => onAdjust(1)}
           disabled={maxKeywords >= 20}
+          aria-label="Increase keyword count"
           className={cn(
             "w-8 h-8 flex items-center justify-center font-body font-semibold text-base",
             "border border-edge-mid transition-colors",

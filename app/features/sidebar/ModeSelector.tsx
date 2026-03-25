@@ -1,4 +1,3 @@
-import Label from "@/app/components/ui/Label"
 import { cn } from "@/app/lib/cn"
 import type { AnalysisMode } from "@/app/lib/prompt-builder/type"
 
@@ -14,8 +13,8 @@ type ModeSelectorProps = {
 
 const ModeSelector = ({ modes, onToggle }: ModeSelectorProps) => {
   return (
-    <div>
-      <Label>Mode</Label>
+    <fieldset className="border-none p-0 m-0">
+      <legend className="text-[0.6rem] tracking-[0.22em] uppercase text-ink/42 font-body font-semibold mb-[0.6rem]">Mode</legend>
       <div className="flex gap-[0.3rem]">
         {MODES.map((m) => {
           const isActive = modes.has(m.id)
@@ -23,6 +22,7 @@ const ModeSelector = ({ modes, onToggle }: ModeSelectorProps) => {
             <button
               type="button"
               key={m.id}
+              aria-pressed={isActive}
               onClick={() => onToggle(m.id)}
               className={cn(
                 "flex-1 flex flex-col items-start gap-[0.12rem] font-body",
@@ -38,7 +38,7 @@ const ModeSelector = ({ modes, onToggle }: ModeSelectorProps) => {
           )
         })}
       </div>
-    </div>
+    </fieldset>
   )
 }
 

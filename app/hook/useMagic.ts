@@ -7,6 +7,7 @@ type AnalyseOptions = {
   maxKeywords?: number
   modes?: AnalysisMode[]
   lockedKeywords?: ParsedKeyword[]
+  customInstructions?: string
   imageData: { data: string; mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" }
 }
 
@@ -30,7 +31,7 @@ export const useMagic = (): UseMagicReturn => {
   }, [])
 
   const analyse = useCallback(
-    async ({ fields, maxKeywords, modes, lockedKeywords = [], imageData }: AnalyseOptions): Promise<void> => {
+    async ({ fields, maxKeywords, modes, lockedKeywords = [], customInstructions, imageData }: AnalyseOptions): Promise<void> => {
       if (fields.length === 0) return
 
       abortRef.current?.abort()
@@ -48,6 +49,7 @@ export const useMagic = (): UseMagicReturn => {
             maxKeywords,
             modes,
             lockedKeywords: lockedKeywords.map((k) => k.label),
+            customInstructions: customInstructions?.trim() || undefined,
             imageData,
           }),
           headers: { "Content-Type": "application/json" },

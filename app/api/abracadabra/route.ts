@@ -14,6 +14,7 @@ export const bodySchema = z.object({
   maxKeywords: z.number().int().min(1).max(20).optional(),
   modes: z.array(z.enum(["trending", "creative"])).optional(),
   lockedKeywords: z.array(z.string().max(100)).max(20).optional(),
+  customInstructions: z.string().max(300).optional(),
   imageData: z.object({
     data: z.string().min(1).max(MAX_IMAGE_B64_LENGTH),
     mediaType: z.enum(["image/jpeg", "image/png", "image/gif", "image/webp"]),
@@ -42,13 +43,14 @@ export const POST = async (req: Request) => {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
 
-  const { fields, maxKeywords, modes, lockedKeywords, imageData } = parseResult.data
+  const { fields, maxKeywords, modes, lockedKeywords, customInstructions, imageData } = parseResult.data
   const { system, userContent, warnings } = buildPrompt({
     fields,
     imageData,
     maxKeywords,
     modes,
     lockedKeywords,
+    customInstructions,
   })
 
   try {

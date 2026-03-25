@@ -1,9 +1,32 @@
+import type { SVGProps } from "react"
 import Rule from "@/app/components/ui/Rule"
 import FieldSelector from "@/app/features/sidebar/FieldSelector"
 import ModeSelector from "@/app/features/sidebar/ModeSelector"
 import ScopeControl from "@/app/features/sidebar/ScopeControl"
 import { cn } from "@/app/lib/cn"
 import type { AnalysisMode, Field } from "@/app/lib/prompt-builder/type"
+
+export type Layout = "columns" | "rows"
+
+const MAX_CUSTOM = 300
+
+const sanitize = (s: string) => s.replace(/<[^>]*>/g, "")
+
+const IconColumns = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 14 14" fill="currentColor" {...props}>
+    <title>Side by side layout</title>
+    <rect x="0" y="0" width="5.5" height="14" rx="1" />
+    <rect x="8.5" y="0" width="5.5" height="14" rx="1" />
+  </svg>
+)
+
+const IconRows = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 14 14" fill="currentColor" {...props}>
+    <title>Stacked layout</title>
+    <rect x="0" y="0" width="14" height="5.5" rx="1" />
+    <rect x="0" y="8.5" width="14" height="5.5" rx="1" />
+  </svg>
+)
 
 type SidebarProps = {
   selectedFields: Field[]
@@ -13,10 +36,14 @@ type SidebarProps = {
   remainingSlots: number
   isLoading: boolean
   canAnalyse: boolean
+  layout: Layout
+  customInstructions: string
   onToggleField: (id: Field) => void
   onToggleMode: (mode: AnalysisMode) => void
   onAdjustMax: (delta: number) => void
   onAnalyse: () => void
+  onLayoutChange: (l: Layout) => void
+  onCustomInstructionsChange: (v: string) => void
 }
 
 const Sidebar = ({
@@ -27,16 +54,24 @@ const Sidebar = ({
   remainingSlots,
   isLoading,
   canAnalyse,
+  layout,
+  customInstructions,
   onToggleField,
   onToggleMode,
   onAdjustMax,
   onAnalyse,
+  onLayoutChange,
+  onCustomInstructionsChange,
 }: SidebarProps) => {
+  const remaining = MAX_CUSTOM - customInstructions.length
+  const isOverLimit = remaining < 0
+
   return (
-    <aside className="w-67 shrink-0 h-full border-r border-edge bg-surface flex flex-col overflow-hidden">
+    <aside aria-label="Controls" className="w-67 shrink-0 h-full border-r border-edge bg-surface flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto flex flex-col gap-6 p-10 pb-6">
+        {/* Title */}
         <div className="pb-1">
-          <div className="font-display text-[3rem] tracking-[0.18em] text-ink uppercase leading-[0.9]">Stylos</div>
+          <h1 className="font-display text-[3rem] tracking-[0.18em] text-ink uppercase leading-[0.9]">Stylos</h1>
           <div className="font-body text-[0.58rem] tracking-[0.2em] uppercase text-ink/42 font-semibold mt-2">
             Aesthetic analysis
           </div>
@@ -58,13 +93,86 @@ const Sidebar = ({
           remainingSlots={remainingSlots}
           onAdjust={onAdjustMax}
         />
+
+        <Rule />
+
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <label
+              htmlFor="hint-textarea"
+              className="font-body text-[0.6rem] tracking-[0.18em] uppercase text-ink/42 font-semibold"
+            >
+              Hint
+            </label>
+            <span
+              aria-live="polite"
+              aria-atomic="true"
+              className={cn(
+                "font-body text-[0.52rem] tabular-nums transition-colors",
+                isOverLimit ? "text-danger" : "text-ink/25",
+              )}
+            >
+              {remaining}
+            </span>
+          </div>
+          <textarea
+            id="hint-textarea"
+            value={customInstructions}
+            onChange={(e) => onCustomInstructionsChange(sanitize(e.target.value).slice(0, MAX_CUSTOM))}
+            rows={3}
+            placeholder="e.g. focus on color palette, avoid trend terms…"
+            className={cn(
+              "w-full bg-surface-2 border font-body text-[0.65rem] leading-relaxed p-[0.5rem_0.6rem] resize-none",
+              "text-ink/70 placeholder:text-ink/18",
+              "focus:outline-none transition-colors",
+              isOverLimit ? "border-danger" : "border-edge focus:border-edge-mid",
+            )}
+          />
+        </div>
+
+        <Rule />
+
+        <div className="flex flex-col gap-2">
+          <span className="font-body text-[0.6rem] tracking-[0.18em] uppercase text-ink/42 font-semibold">Layout</span>
+          <div className="flex gap-1.5">
+            <button
+              type="button"
+              onClick={() => onLayoutChange("columns")}
+              title="Side by side"
+              className={cn(
+                "flex-1 py-[0.45rem] flex items-center justify-center gap-1.5 border transition-colors cursor-pointer",
+                layout === "columns"
+                  ? "border-edge-mid text-ink/70 bg-surface-2"
+                  : "border-edge text-ink/25 hover:text-ink/45 bg-transparent",
+              )}
+            >
+              <IconColumns className="w-2.5 h-2.5" />
+              <span className="font-body text-[0.56rem] tracking-widest uppercase">Side</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onLayoutChange("rows")}
+              title="Stacked"
+              className={cn(
+                "flex-1 py-[0.45rem] flex items-center justify-center gap-1.5 border transition-colors cursor-pointer",
+                layout === "rows"
+                  ? "border-edge-mid text-ink/70 bg-surface-2"
+                  : "border-edge text-ink/25 hover:text-ink/45 bg-transparent",
+              )}
+            >
+              <IconRows className="w-2.5 h-2.5" />
+              <span className="font-body text-[0.56rem] tracking-widest uppercase">Stack</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="shrink-0 p-10 pt-4 pb-10 border-t border-edge">
+      <div className="shrink-0 p-10 pt-4 pb-6 border-t border-edge flex flex-col gap-4">
         <button
           type="button"
           onClick={onAnalyse}
           disabled={!canAnalyse}
+          aria-busy={isLoading}
           className={cn(
             "w-full py-[0.95rem] font-body text-[0.72rem] tracking-[0.22em] uppercase font-bold transition-colors",
             canAnalyse

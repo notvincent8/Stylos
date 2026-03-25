@@ -44,19 +44,19 @@ const ImageZone = ({ image, processing, error, onFile, onClear }: ImageZoneProps
 
   if (image && !processing) {
     return (
-      <div>
-        <div className="border border-edge-mid bg-surface flex items-center justify-center overflow-hidden">
+      <div className="h-full flex flex-col">
+        <div className="flex-1 min-h-0 border border-edge-mid bg-surface flex items-center justify-center overflow-hidden">
           <Image
             src={image.previewUrl}
-            alt="preview"
+            alt={`Preview of ${image.name}`}
             width={image.width}
             height={image.height}
             unoptimized
-            className="max-w-full max-h-[60vh] w-auto h-auto block"
+            className="max-w-full max-h-full w-auto h-auto block"
           />
         </div>
 
-        <div className="flex items-center gap-6 py-[0.55rem] border-b border-edge">
+        <div className="flex shrink-0 items-center gap-6 py-[0.55rem] border-b border-edge">
           <span className="font-body text-[0.68rem] text-ink flex-1 overflow-hidden text-ellipsis whitespace-nowrap max-w-45">
             {image.name}
           </span>
@@ -69,6 +69,7 @@ const ImageZone = ({ image, processing, error, onFile, onClear }: ImageZoneProps
           <button
             type="button"
             onClick={onClear}
+            aria-label="Remove image"
             className="font-body text-[0.6rem] tracking-[0.12em] uppercase font-semibold text-ink/42 hover:text-ink transition-colors shrink-0 bg-transparent border-none cursor-pointer p-0"
           >
             Remove
@@ -87,10 +88,11 @@ const ImageZone = ({ image, processing, error, onFile, onClear }: ImageZoneProps
   }
 
   return (
-    <div>
+    <div className="h-full flex flex-col">
       <button
         type="button"
         tabIndex={0}
+        aria-label={processing ? "Processing image" : error ? error : "Upload image — drop, click, or paste"}
         onClick={() => !processing && inputRef.current?.click()}
         onKeyDown={(e) => e.key === "Enter" && !processing && inputRef.current?.click()}
         onDragOver={(e) => {
@@ -100,7 +102,7 @@ const ImageZone = ({ image, processing, error, onFile, onClear }: ImageZoneProps
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
         className={cn(
-          "w-full min-h-90 flex flex-col items-center justify-center gap-[0.6rem] p-8",
+          "w-full flex-1 min-h-45 flex flex-col items-center justify-center gap-[0.6rem] p-8",
           "border transition-colors duration-150",
           dragOver
             ? "border-accent bg-accent-dim cursor-copy"
