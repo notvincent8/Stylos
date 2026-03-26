@@ -3,7 +3,7 @@ import { z } from "zod"
 import client from "@/app/lib/anthropic"
 import { buildPrompt } from "@/app/lib/prompt-builder"
 import { fieldIds } from "@/app/lib/prompt-builder/type"
-import { checkRateLimit, getIp } from "@/app/lib/rateLimit"
+import { checkRateLimit, checkUserDailyCap, getIp } from "@/app/lib/rateLimit"
 
 // ~1.5 MB of base64 ≈ ~1.1 MB of actual image data — enough for a
 // 1568-px JPEG after client-side processing, not enough for abuse.
@@ -23,7 +23,9 @@ export const bodySchema = z.object({
 
 export const POST = async (req: Request) => {
   const ip = getIp(req)
-  const limit = checkRateLimit(ip)
+
+  const limit = await checkRateLimit(ip)
+
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many requests" },
@@ -38,6 +40,24 @@ export const POST = async (req: Request) => {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
 
+  // Per-user daily cap — checked after body validation so malformed requests
+  // don't consume the user's allowance.
+  const userCap = await checkUserDailyCap(ip)
+
+  if (!userCap.allowed) {
+    return NextResponse.json(
+      { error: "Daily limit reached. Come back tomorrow!" },
+      {
+        status: 429,
+        headers: {
+          "X-User-Limit": String(userCap.cap),
+          "X-User-Used": String(userCap.used),
+          "Retry-After": "86400",
+        },
+      },
+    )
+  }
+
   const { fields, maxKeywords, modes, lockedKeywords, customInstructions, imageData } = parseResult.data
   const { system, userContent, warnings } = buildPrompt({
     fields,
@@ -48,16 +68,37 @@ export const POST = async (req: Request) => {
     customInstructions,
   })
 
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 30_000)
+
   try {
-    const message = await client.messages.create({
-      model: "claude-opus-4-6",
-      max_tokens: 1024,
-      system,
-      messages: [{ role: "user", content: userContent }],
-    })
-    return NextResponse.json({ content: message.content, warnings })
+    const message = await client.messages.create(
+      {
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1024,
+        system,
+        messages: [{ role: "user", content: userContent }],
+      },
+      { signal: controller.signal },
+    )
+    return NextResponse.json(
+      { content: message.content, warnings },
+      {
+        headers: {
+          "X-RateLimit-Limit": "10",
+          "X-RateLimit-Remaining": String(limit.remaining),
+          "X-User-Limit": String(userCap.cap),
+          "X-User-Used": String(userCap.used),
+        },
+      },
+    )
   } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      return NextResponse.json({ error: "Request timeout" }, { status: 504 })
+    }
     console.error("Something went wrong", err)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  } finally {
+    clearTimeout(timeoutId)
   }
 }

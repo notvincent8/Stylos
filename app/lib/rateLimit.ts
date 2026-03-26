@@ -1,52 +1,65 @@
-// Sliding-window rate limiter.
+import { Ratelimit } from "@upstash/ratelimit"
+import { Redis } from "@upstash/redis"
+
+// Shared Redis instance — used by both the per-IP rate limiter and the
+// per-user daily cap so we only open one connection pool.
+const redis = Redis.fromEnv()
+
+// Sliding-window rate limiter backed by Upstash Redis.
 //
-// Currently in-memory — works for a single-process server.
-// To swap to Redis, implement the same `checkRateLimit` signature using
-// ioredis or @upstash/ratelimit and export it from here instead.
-//
-// Note: in a serverless environment (e.g. Vercel), the store resets on each
-// cold start. For persistent limits across instances, use Redis.
+// The `prefix` namespaces keys in the shared database so this app's entries
+// never collide with other projects using the same Upstash instance.
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "60 s"),
+  prefix: "stylos:rl",
+})
 
-const WINDOW_MS = 60_000 // 1 minute
-const MAX_REQUESTS = 10 // per IP per window
-
-// Map<ip, timestamps[]>
-const store = new Map<string, number[]>()
-
-// Periodically evict IPs whose entire window has expired so the Map does not
-// grow without bound on long-running servers.
-setInterval(() => {
-  const now = Date.now()
-  for (const [ip, ts] of store) {
-    if (ts.every((t) => now - t >= WINDOW_MS)) {
-      store.delete(ip)
-    }
-  }
-}, WINDOW_MS * 2).unref()
+// Maximum number of Anthropic API calls a single IP may make per calendar day.
+// Surfaced to the client via X-User-Limit / X-User-Used headers so the UI
+// can display "You've used X of Y analyses today."
+export const DAILY_USER_CAP = 5
 
 export type RateLimitResult = { allowed: true; remaining: number } | { allowed: false; retryAfter: number } // seconds until the window resets
 
-export function checkRateLimit(ip: string): RateLimitResult {
-  const now = Date.now()
+export type UserCapResult = {
+  allowed: boolean
+  used: number
+  cap: number
+}
 
-  // Slide the window: discard timestamps outside it
-  const timestamps = (store.get(ip) ?? []).filter((t) => now - t < WINDOW_MS)
+export const checkRateLimit = async (ip: string): Promise<RateLimitResult> => {
+  const { success, remaining, reset } = await ratelimit.limit(ip)
 
-  if (timestamps.length >= MAX_REQUESTS) {
-    // Oldest timestamp in window tells us when a slot opens up
-    const retryAfter = Math.ceil((timestamps[0] + WINDOW_MS - now) / 1000)
-    store.set(ip, timestamps)
+  if (!success) {
+    const retryAfter = Math.ceil((reset - Date.now()) / 1000)
     return { allowed: false, retryAfter }
   }
 
-  timestamps.push(now)
-  store.set(ip, timestamps)
-  return { allowed: true, remaining: MAX_REQUESTS - timestamps.length }
+  return { allowed: true, remaining }
+}
+
+// Increments and checks the per-IP daily usage counter. The key includes the
+// current UTC date so it rotates automatically at midnight. A 25-hour TTL
+// ensures leftover keys self-clean even if the rotation day is missed.
+//
+// We increment before calling Anthropic so the counter stays accurate even
+// when the upstream call fails — only invalid bodies are excluded.
+export const checkUserDailyCap = async (ip: string): Promise<UserCapResult> => {
+  const today = new Date().toISOString().slice(0, 10) // e.g. "2026-03-26"
+  const key = `stylos:user:${ip}:${today}`
+
+  const used = await redis.incr(key)
+  if (used === 1) {
+    await redis.expire(key, 25 * 60 * 60)
+  }
+
+  return { allowed: used <= DAILY_USER_CAP, used, cap: DAILY_USER_CAP }
 }
 
 // Reads the client IP injected by proxy.ts, which overwrites any
 // client-supplied x-real-ip with a value derived from the platform's own
 // header — safe to trust for rate-limiting purposes.
-export function getIp(req: Request): string {
+export const getIp = (req: Request): string => {
   return req.headers.get("x-real-ip") ?? "unknown"
 }
