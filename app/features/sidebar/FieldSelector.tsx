@@ -13,7 +13,7 @@ const FieldSelector = ({ selectedFields, onToggle }: FieldSelectorProps) => {
       <legend className="text-[0.68rem] tracking-[0.22em] uppercase text-ink/42 font-body font-semibold mb-[0.6rem]">
         Disciplines
       </legend>
-      <div className="flex flex-col gap-[0.28rem]">
+      <div className="flex flex-col gap-1">
         {FIELDS.map((f) => {
           const isActive = selectedFields.includes(f.id)
           return (
@@ -23,7 +23,7 @@ const FieldSelector = ({ selectedFields, onToggle }: FieldSelectorProps) => {
               aria-pressed={isActive}
               onClick={() => onToggle(f.id)}
               className={cn(
-                "flex items-center gap-2 w-full font-body text-[0.78rem] font-semibold tracking-[0.04em] uppercase",
+                "flex items-center gap-2 w-full font-body text-xs font-semibold tracking-[0.04em] uppercase",
                 "border border-l-2 py-[0.48rem] px-3 transition-all duration-150",
                 isActive
                   ? "border-edge-mid border-l-accent bg-accent-dim text-accent"

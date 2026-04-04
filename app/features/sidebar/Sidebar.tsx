@@ -79,7 +79,7 @@ const Sidebar = ({
       aria-label="Controls"
       className="w-full md:w-67 shrink-0 md:h-full border-b md:border-b-0 md:border-r border-edge bg-surface flex flex-col md:overflow-hidden"
     >
-      <div className="flex-1  md:overflow-y-auto flex flex-col gap-5 md:gap-6 p-5 md:p-9 pb-5 md:pb-6">
+      <div className="flex flex-col flex-1 justify-between py-5 px-5 gap-3">
         <div className="pb-1">
           <h1 className="font-display text-[2.4rem] md:text-[3rem] tracking-[0.18em] text-ink uppercase leading-[0.9]">
             Stylos
@@ -89,15 +89,9 @@ const Sidebar = ({
           </div>
         </div>
 
-        <Rule />
-
         <FieldSelector selectedFields={selectedFields} onToggle={onToggleField} />
 
-        <Rule />
-
         <ModeSelector modes={modes} onToggle={onToggleMode} />
-
-        <Rule />
 
         <ScopeControl
           maxKeywords={maxKeywords}
@@ -105,8 +99,6 @@ const Sidebar = ({
           remainingSlots={remainingSlots}
           onAdjust={onAdjustMax}
         />
-
-        <Rule />
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
@@ -131,7 +123,7 @@ const Sidebar = ({
             id="hint-textarea"
             value={customInstructions}
             onChange={(e) => onCustomInstructionsChange(sanitize(e.target.value).slice(0, MAX_CUSTOM))}
-            rows={3}
+            rows={2}
             placeholder="e.g. focus on color palette, avoid trend terms…"
             className={cn(
               "w-full bg-surface-2 border font-body text-[0.78rem] leading-relaxed p-[0.5rem_0.6rem] resize-none",
@@ -146,7 +138,7 @@ const Sidebar = ({
 
         <div className="hidden md:flex flex-col gap-2">
           <span className="font-body text-[0.68rem] tracking-[0.18em] uppercase text-ink/42 font-semibold">Layout</span>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1">
             <button
               type="button"
               onClick={() => onLayoutChange("columns")}

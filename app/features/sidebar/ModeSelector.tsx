@@ -17,7 +17,7 @@ const ModeSelector = ({ modes, onToggle }: ModeSelectorProps) => {
       <legend className="text-[0.68rem] tracking-[0.22em] uppercase text-ink/42 font-body font-semibold mb-[0.6rem]">
         Mode
       </legend>
-      <div className="flex gap-[0.3rem]">
+      <div className="flex gap-1">
         {MODES.map((m) => {
           const isActive = modes.has(m.id)
           return (
@@ -34,8 +34,8 @@ const ModeSelector = ({ modes, onToggle }: ModeSelectorProps) => {
                   : "border-edge-mid border-l-transparent text-ink/42 hover:border-edge-strong hover:bg-surface-2 hover:text-ink",
               )}
             >
-              <span className="text-[0.78rem] font-bold tracking-[0.06em] uppercase">{m.label}</span>
-              <span className="text-[0.65rem] text-left tracking-[0.05em] uppercase text-ink/18">{m.desc}</span>
+              <span className="text-xs font-bold tracking-[0.06em] uppercase">{m.label}</span>
+              <span className="text-[0.6rem] text-left tracking-[0.05em] uppercase text-ink/18">{m.desc}</span>
             </button>
           )
         })}
